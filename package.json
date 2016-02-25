@@ -10,7 +10,15 @@
     "type": "git",
     "url": "git+https://github.com/vikramcse/retrive.git"
   },
-  "keywords": ["http", "https", "retrive", "fetch", "request", "tool", "utility"],
+  "keywords": [
+    "http",
+    "https",
+    "retrive",
+    "fetch",
+    "request",
+    "tool",
+    "utility"
+  ],
   "author": "Vikram <vikramcse.10@gmail.com>",
   "license": "ISC",
   "bugs": {
@@ -20,5 +28,8 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "mocha": "^2.4.5"
+  },
+  "dependencies": {
+    "q": "^1.4.1"
   }
 }

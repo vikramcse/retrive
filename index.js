@@ -2,47 +2,54 @@
 var urlLib = require('url');
 var http = require('http');
 var https = require('https');
+var Q = require('q');
 
-var retrive = function (url, cb) {
+var retrive = function (url) {
   var redirectCount = 0;
 
-  var get = function (url, cb) {
+  var get = function (url) {
     var protocol = urlLib.parse(url).protocol === 'https:' ? https : http;
+    var deferred = Q.defer();
 
-    protocol.get(url, function (res) {
+    var req = protocol.request(url, function (res) {
       var data = '';
+
+      res.setEncoding('utf8');
 
       // Code for url redirect
       // Response code 302 is for url redirect
       if (res.statusCode < 400 && res.statusCode >= 300 && res.headers.location) {
         if (++redirectCount > 10) {
-          cb(new Error('Redirected 10 times. Aborting.'));
-          return;
+          deferred.reject(new Error('Redirected 10 times. Aborting.'));
         }
 
         // Recursive call to get
-        get(urlLib.resolve(url, res.headers.location), cb);
-        return;
+        return get(urlLib.resolve(url, res.headers.location));
       }
 
       if (res.statusCode !== 200) {
-        cb(res.statusCode);
-        return;
+        deferred.resolve(res.statusCode);
       }
-
-      res.setEncoding('utf8');
 
       res.on('data', function (payload) {
         data = data + payload;
       });
 
       res.on('end', function () {
-        cb(null, data);
+        deferred.resolve(data);
       });
-    }).on('error', cb);
+    });
+
+    req.on('error', function (err) {
+      deferred.reject(err);
+    });
+
+    req.end();
+
+    return deferred.promise;
   };
 
-  get(url, cb);
+  return get(url);
 };
 
 module.exports = retrive;
